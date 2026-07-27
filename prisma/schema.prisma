@@ -1,0 +1,167 @@
+// Prisma schema for the Foosball Tournament Manager
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum MatchStage {
+  LEAGUE
+  QUALIFIER
+  GRAND_FINAL
+}
+
+enum GameWinner {
+  TEAM_A
+  TEAM_B
+}
+
+enum PlayerTier {
+  A
+  B
+  C
+  D
+}
+
+enum PlayerPosition {
+  ATTACKER
+  DEFENDER
+  ALL_ROUNDER
+}
+
+enum Role {
+  ADMIN
+  READ_ONLY
+}
+
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  passwordHash String
+  role         Role
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Player {
+  id           String          @id @default(cuid())
+  name         String
+  tier         PlayerTier?
+  position     PlayerPosition?
+  auctionPrice Int?
+  auctionOrder Int             @default(0)
+  team         Team?           @relation(fields: [teamId], references: [id])
+  teamId       String?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  gamesAsTeamAPlayer1 Game[] @relation("GameTeamAPlayer1")
+  gamesAsTeamAPlayer2 Game[] @relation("GameTeamAPlayer2")
+  gamesAsTeamBPlayer1 Game[] @relation("GameTeamBPlayer1")
+  gamesAsTeamBPlayer2 Game[] @relation("GameTeamBPlayer2")
+
+  @@index([teamId])
+}
+
+model Owner {
+  id              String   @id @default(cuid())
+  name            String
+  teamName        String?
+  startingBudget  Int      @default(100)
+  remainingBudget Int      @default(100)
+  team            Team?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model Team {
+  id        String   @id @default(cuid())
+  name      String
+  color     String?
+  owner     Owner    @relation(fields: [ownerId], references: [id])
+  ownerId   String   @unique
+  players   Player[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  homeMatches Match[] @relation("HomeTeam")
+  awayMatches Match[] @relation("AwayTeam")
+  standing    Standing?
+}
+
+model Match {
+  id          String     @id @default(cuid())
+  stage       MatchStage @default(LEAGUE)
+  homeTeam    Team       @relation("HomeTeam", fields: [homeTeamId], references: [id])
+  homeTeamId  String
+  awayTeam    Team       @relation("AwayTeam", fields: [awayTeamId], references: [id])
+  awayTeamId  String
+  completed   Boolean    @default(false)
+  games       Game[]
+  homeScore   Int        @default(0)
+  awayScore   Int        @default(0)
+  winnerTeamId String?
+  order       Int        @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([homeTeamId])
+  @@index([awayTeamId])
+  @@index([stage])
+}
+
+model Game {
+  id         String      @id @default(cuid())
+  match      Match       @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  matchId    String
+  gameNumber Int
+
+  teamAPlayer1   Player @relation("GameTeamAPlayer1", fields: [teamAPlayer1Id], references: [id])
+  teamAPlayer1Id String
+  teamAPlayer2   Player @relation("GameTeamAPlayer2", fields: [teamAPlayer2Id], references: [id])
+  teamAPlayer2Id String
+
+  teamBPlayer1   Player @relation("GameTeamBPlayer1", fields: [teamBPlayer1Id], references: [id])
+  teamBPlayer1Id String
+  teamBPlayer2   Player @relation("GameTeamBPlayer2", fields: [teamBPlayer2Id], references: [id])
+  teamBPlayer2Id String
+
+  winner    GameWinner?
+  scoreA    Int         @default(0)
+  scoreB    Int         @default(0)
+  notes     String?
+  playedAt  DateTime?
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  @@unique([matchId, gameNumber])
+}
+
+model Standing {
+  id             String @id @default(cuid())
+  team           Team   @relation(fields: [teamId], references: [id])
+  teamId         String @unique
+  matchesPlayed  Int    @default(0)
+  wins           Int    @default(0)
+  losses         Int    @default(0)
+  leaguePoints   Int    @default(0)
+  gamesWon       Int    @default(0)
+  gamesLost      Int    @default(0)
+  goalsFor       Int    @default(0)
+  goalsAgainst   Int    @default(0)
+  updatedAt      DateTime @updatedAt
+}
+
+model Tournament {
+  id          String   @id @default(cuid())
+  name        String   @default("Office Foosball Tournament")
+  auctionDone Boolean  @default(false)
+  leagueDone  Boolean  @default(false)
+  championId  String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
