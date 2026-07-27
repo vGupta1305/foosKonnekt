@@ -5,29 +5,36 @@ import { prisma } from "@/lib/prisma";
 import { requireAdmin } from "@/lib/auth";
 import { OWNER_COUNT, ownerFormSchema } from "@/lib/validations/owner";
 import type { ActionResult } from "@/lib/actions/players";
+import { runSerializable } from "@/lib/serializable-transaction";
 
 const DEFAULT_STARTING_BUDGET = 100;
+const ownersInclude = { team: { select: { id: true, name: true } } } as const;
 
 export async function getOwners() {
-  const existing = await prisma.owner.findMany({
-    include: { team: { select: { id: true, name: true } } },
-    orderBy: { createdAt: "asc" },
-  });
+  // Seeding is check-then-create, so two concurrent first-ever requests could
+  // otherwise both see zero owners and both insert 5 — run it Serializable so
+  // Postgres aborts and retries one of them instead of double-seeding.
+  return runSerializable(async (tx) => {
+    const existing = await tx.owner.findMany({
+      include: ownersInclude,
+      orderBy: { createdAt: "asc" },
+    });
 
-  if (existing.length >= OWNER_COUNT) return existing;
+    if (existing.length >= OWNER_COUNT) return existing;
 
-  const toCreate = OWNER_COUNT - existing.length;
-  await prisma.owner.createMany({
-    data: Array.from({ length: toCreate }, (_, i) => ({
-      name: `Owner ${existing.length + i + 1}`,
-      startingBudget: DEFAULT_STARTING_BUDGET,
-      remainingBudget: DEFAULT_STARTING_BUDGET,
-    })),
-  });
+    const toCreate = OWNER_COUNT - existing.length;
+    await tx.owner.createMany({
+      data: Array.from({ length: toCreate }, (_, i) => ({
+        name: `Owner ${existing.length + i + 1}`,
+        startingBudget: DEFAULT_STARTING_BUDGET,
+        remainingBudget: DEFAULT_STARTING_BUDGET,
+      })),
+    });
 
-  return prisma.owner.findMany({
-    include: { team: { select: { id: true, name: true } } },
-    orderBy: { createdAt: "asc" },
+    return tx.owner.findMany({
+      include: ownersInclude,
+      orderBy: { createdAt: "asc" },
+    });
   });
 }
 
