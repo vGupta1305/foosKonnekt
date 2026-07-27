@@ -7,27 +7,28 @@ import type { ActionResult } from "@/lib/actions/players";
 import { requireAdmin } from "@/lib/auth";
 
 export async function getPlayoffData() {
-  const standings = await getStandings();
-  const qualifier = await prisma.match.findFirst({
-    where: { stage: "QUALIFIER" },
-    include: {
-      homeTeam: true,
-      awayTeam: true,
-      games: true,
-    },
-  });
-  const grandFinal = await prisma.match.findFirst({
-    where: { stage: "GRAND_FINAL" },
-    include: {
-      homeTeam: true,
-      awayTeam: true,
-      games: true,
-    },
-  });
-
-  const pendingLeagueMatches = await prisma.match.count({
-    where: { stage: "LEAGUE", completed: false },
-  });
+  const [standings, qualifier, grandFinal, pendingLeagueMatches] = await Promise.all([
+    getStandings(),
+    prisma.match.findFirst({
+      where: { stage: "QUALIFIER" },
+      include: {
+        homeTeam: true,
+        awayTeam: true,
+        games: true,
+      },
+    }),
+    prisma.match.findFirst({
+      where: { stage: "GRAND_FINAL" },
+      include: {
+        homeTeam: true,
+        awayTeam: true,
+        games: true,
+      },
+    }),
+    prisma.match.count({
+      where: { stage: "LEAGUE", completed: false },
+    }),
+  ]);
 
   const champion =
     grandFinal?.completed && grandFinal.winnerTeamId

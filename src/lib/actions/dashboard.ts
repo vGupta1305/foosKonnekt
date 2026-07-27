@@ -1,5 +1,4 @@
 import { prisma } from "@/lib/prisma";
-import { getStandings } from "@/lib/actions/standings";
 import { getPlayoffData } from "@/lib/actions/playoffs";
 
 export async function ensureTournament() {
@@ -9,28 +8,26 @@ export async function ensureTournament() {
 }
 
 export async function getDashboardData() {
-  const [tournament, totalPlayers, totalTeams, leagueMatches, allPendingMatches, standings, playoffData] =
+  const [tournament, totalPlayers, totalTeams, leagueMatches, allPendingMatches, playoffData, upcomingMatch] =
     await Promise.all([
       ensureTournament(),
       prisma.player.count(),
       prisma.team.count(),
       prisma.match.findMany({ where: { stage: "LEAGUE" } }),
       prisma.match.count({ where: { completed: false } }),
-      getStandings(),
       getPlayoffData(),
+      prisma.match.findFirst({
+        where: { completed: false },
+        include: {
+          homeTeam: { select: { name: true } },
+          awayTeam: { select: { name: true } },
+        },
+        orderBy: [{ stage: "asc" }, { order: "asc" }],
+      }),
     ]);
 
   const leagueTotal = leagueMatches.length;
   const leagueCompleted = leagueMatches.filter((m) => m.completed).length;
-
-  const upcomingMatch = await prisma.match.findFirst({
-    where: { completed: false },
-    include: {
-      homeTeam: { select: { name: true } },
-      awayTeam: { select: { name: true } },
-    },
-    orderBy: [{ stage: "asc" }, { order: "asc" }],
-  });
 
   return {
     tournamentName: tournament.name,
@@ -39,7 +36,7 @@ export async function getDashboardData() {
     leagueTotal,
     leagueCompleted,
     remainingMatches: allPendingMatches,
-    standings: standings.slice(0, 5),
+    standings: playoffData.standings.slice(0, 5),
     upcomingMatch: upcomingMatch
       ? {
           id: upcomingMatch.id,

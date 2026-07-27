@@ -30,21 +30,22 @@ export type TeamStatRow = {
 };
 
 export async function getPlayerStats(): Promise<PlayerStatRow[]> {
-  const players = await prisma.player.findMany({
-    include: { team: { select: { name: true } } },
-  });
-
-  const games = await prisma.game.findMany({
-    select: {
-      teamAPlayer1Id: true,
-      teamAPlayer2Id: true,
-      teamBPlayer1Id: true,
-      teamBPlayer2Id: true,
-      winner: true,
-      scoreA: true,
-      scoreB: true,
-    },
-  });
+  const [players, games] = await Promise.all([
+    prisma.player.findMany({
+      include: { team: { select: { name: true } } },
+    }),
+    prisma.game.findMany({
+      select: {
+        teamAPlayer1Id: true,
+        teamAPlayer2Id: true,
+        teamBPlayer1Id: true,
+        teamBPlayer2Id: true,
+        winner: true,
+        scoreA: true,
+        scoreB: true,
+      },
+    }),
+  ]);
 
   const stats = new Map<
     string,
@@ -102,14 +103,15 @@ export async function getPlayerStats(): Promise<PlayerStatRow[]> {
 }
 
 export async function getTeamStats(): Promise<TeamStatRow[]> {
-  const standings = await getStandings();
-  const teams = await prisma.team.findMany();
-
-  const matches = await prisma.match.findMany({
-    where: { completed: true },
-    include: { games: true },
-    orderBy: { createdAt: "asc" },
-  });
+  const [standings, teams, matches] = await Promise.all([
+    getStandings(),
+    prisma.team.findMany(),
+    prisma.match.findMany({
+      where: { completed: true },
+      include: { games: true },
+      orderBy: { createdAt: "asc" },
+    }),
+  ]);
 
   const rows: TeamStatRow[] = teams.map((team) => {
     const teamMatches = matches.filter(

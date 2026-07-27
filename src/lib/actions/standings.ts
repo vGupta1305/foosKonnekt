@@ -23,11 +23,13 @@ function leaguePointsForGamesWon(gamesWon: number): number {
 }
 
 export async function getStandings(): Promise<StandingRow[]> {
-  const teams = await prisma.team.findMany({ orderBy: { createdAt: "asc" } });
-  const matches = await prisma.match.findMany({
-    where: { stage: "LEAGUE", completed: true },
-    include: { games: true },
-  });
+  const [teams, matches] = await Promise.all([
+    prisma.team.findMany({ orderBy: { createdAt: "asc" } }),
+    prisma.match.findMany({
+      where: { stage: "LEAGUE", completed: true },
+      include: { games: true },
+    }),
+  ]);
 
   const rows = new Map<string, StandingRow>();
   for (const team of teams) {

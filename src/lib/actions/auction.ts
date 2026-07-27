@@ -59,8 +59,10 @@ async function ensureTierShuffled(tx: Prisma.TransactionClient, tier: ActiveTier
 }
 
 export async function getAuctionData() {
-  const teams = await ensureTeams();
-  const tierAPending = await prisma.player.count({ where: { tier: "A", teamId: null } });
+  const [teams, tierAPending] = await Promise.all([
+    ensureTeams(),
+    prisma.player.count({ where: { tier: "A", teamId: null } }),
+  ]);
 
   const currentTier = await runSerializable(async (tx) => {
     const tier = await getCurrentAuctionTier(tx);
