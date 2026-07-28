@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Gavel, SkipForward } from "lucide-react";
+import { Gavel, Shuffle, SkipForward } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { sellPlayer, skipPlayer } from "@/lib/actions/auction";
+import { reshufflePool, sellPlayer, skipPlayer } from "@/lib/actions/auction";
 import { MAX_BID, MAX_PLAYERS_PER_TEAM, MIN_BID } from "@/lib/constants/auction";
 
 type Team = {
@@ -120,6 +120,18 @@ export function AuctionBoard({
     toast.info(`${currentPlayer.name} skipped`);
   }
 
+  async function handleReshuffle() {
+    setSubmitting(true);
+    const result = await reshufflePool();
+    setSubmitting(false);
+
+    if (!result.ok) {
+      toast.error(result.error);
+      return;
+    }
+    toast.success("Remaining pool reshuffled");
+  }
+
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
       <Card>
@@ -131,11 +143,23 @@ export function AuctionBoard({
         <CardContent className="flex flex-col gap-6">
           {currentPlayer ? (
             <>
-              <div className="flex flex-col gap-1">
-                <p className="text-2xl font-semibold">{currentPlayer.name}</p>
-                <p className="text-xs text-muted-foreground">
-                  {unsoldPlayers.length} player(s) remaining in the pool
-                </p>
+              <div className="flex items-start justify-between gap-4">
+                <div className="flex flex-col gap-1">
+                  <p className="text-2xl font-semibold">{currentPlayer.name}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {unsoldPlayers.length} player(s) remaining in the pool
+                  </p>
+                </div>
+                {isAdmin && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleReshuffle}
+                    disabled={submitting}
+                  >
+                    <Shuffle /> Randomize pool
+                  </Button>
+                )}
               </div>
 
               <div className="flex flex-col gap-2 rounded-lg border bg-muted/40 p-4">

@@ -130,6 +130,26 @@ export async function sellPlayer(
   return { ok: true, data: undefined };
 }
 
+export async function reshufflePool(): Promise<ActionResult> {
+  const authError = await requireAdmin();
+  if (authError) return authError;
+
+  await runSerializable(async (tx) => {
+    const players = await tx.player.findMany({
+      where: { teamId: null, OR: [{ tier: null }, { tier: { not: "A" } }] },
+    });
+    const shuffled = shuffle(players);
+    await Promise.all(
+      shuffled.map((p, index) =>
+        tx.player.update({ where: { id: p.id }, data: { auctionOrder: index + 1 } }),
+      ),
+    );
+  });
+
+  revalidatePath("/auction");
+  return { ok: true, data: undefined };
+}
+
 export async function skipPlayer(playerId: string): Promise<ActionResult> {
   const authError = await requireAdmin();
   if (authError) return authError;
