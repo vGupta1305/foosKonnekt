@@ -1,7 +1,8 @@
 import { z } from "zod";
 
 export const MAX_PLAYERS = 20;
-export const PLAYER_TIERS = ["A", "B", "C", "D"] as const;
+export const PLAYER_TIERS = ["A"] as const;
+/** Tier A (lottery) must have exactly this many players. */
 export const MAX_PLAYERS_PER_TIER = 5;
 export const PLAYER_POSITIONS = ["ATTACKER", "DEFENDER", "ALL_ROUNDER"] as const;
 

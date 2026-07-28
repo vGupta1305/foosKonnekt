@@ -7,7 +7,7 @@ import { verifySession } from "@/lib/auth";
 export const dynamic = "force-dynamic";
 
 export default async function AuctionPage() {
-  const [{ teams, unsoldPlayers, lotteryComplete, currentTier }, session] = await Promise.all([
+  const [{ teams, unsoldPlayers, lotteryComplete }, session] = await Promise.all([
     getAuctionData(),
     verifySession(),
   ]);
@@ -17,11 +17,9 @@ export default async function AuctionPage() {
       <div className="mb-6 flex flex-col gap-1">
         <h1 className="text-2xl font-semibold tracking-tight">Auction</h1>
         <p className="text-sm text-muted-foreground">
-          Auctioned tier by tier — Tier B, then C, then D — with the next
-          player picked at random from the active tier. Bids must be between{" "}
-          {MIN_BID} and {MAX_BID}. Each team can hold at most one player per
-          tier (max 4 total). Tier A players are drawn by lottery, not bid on
-          here.
+          The remaining 15 players come up in random order. Bids must be
+          between {MIN_BID} and {MAX_BID}. Tier A players are drawn by
+          lottery, not bid on here.
         </p>
       </div>
       {!lotteryComplete && (
@@ -30,14 +28,6 @@ export default async function AuctionPage() {
           <Link href="/lottery" className="font-medium underline underline-offset-2">
             Go to lottery
           </Link>
-        </div>
-      )}
-      {lotteryComplete && currentTier && (
-        <div className="mb-6 rounded-lg border border-primary/40 bg-primary/10 px-4 py-3 text-sm text-primary">
-          Now auctioning:{" "}
-          <span className="font-semibold">
-            {currentTier === "UNTIERED" ? "Untiered players" : `Tier ${currentTier}`}
-          </span>
         </div>
       )}
       <AuctionBoard
@@ -51,13 +41,11 @@ export default async function AuctionPage() {
             id: p.id,
             name: p.name,
             auctionPrice: p.auctionPrice,
-            tier: p.tier,
           })),
         }))}
         unsoldPlayers={unsoldPlayers.map((p) => ({
           id: p.id,
           name: p.name,
-          tier: p.tier,
         }))}
       />
     </div>

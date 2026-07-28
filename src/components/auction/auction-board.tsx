@@ -29,13 +29,12 @@ type Team = {
   name: string;
   ownerName: string;
   remainingBudget: number;
-  players: { id: string; name: string; auctionPrice: number | null; tier: string | null }[];
+  players: { id: string; name: string; auctionPrice: number | null }[];
 };
 
 type UnsoldPlayer = {
   id: string;
   name: string;
-  tier: string | null;
 };
 
 export function AuctionBoard({
@@ -86,10 +85,6 @@ export function AuctionBoard({
       toast.error(`${team.name} already has ${MAX_PLAYERS_PER_TEAM} players`);
       return;
     }
-    if (currentPlayer?.tier && team.players.some((p) => p.tier === currentPlayer.tier)) {
-      toast.error(`${team.name} already has a Tier ${currentPlayer.tier} player`);
-      return;
-    }
     if (amount > team.remainingBudget) {
       toast.error(`${team.name} does not have enough budget`);
       return;
@@ -137,12 +132,7 @@ export function AuctionBoard({
           {currentPlayer ? (
             <>
               <div className="flex flex-col gap-1">
-                <div className="flex items-center gap-2">
-                  <p className="text-2xl font-semibold">{currentPlayer.name}</p>
-                  {currentPlayer.tier && (
-                    <Badge variant="outline">Tier {currentPlayer.tier}</Badge>
-                  )}
-                </div>
+                <p className="text-2xl font-semibold">{currentPlayer.name}</p>
                 <p className="text-xs text-muted-foreground">
                   {unsoldPlayers.length} player(s) remaining in the pool
                 </p>
@@ -178,16 +168,12 @@ export function AuctionBoard({
                         </SelectTrigger>
                         <SelectContent>
                           {teams.map((team) => {
-                            const hasTier =
-                              Boolean(currentPlayer?.tier) &&
-                              team.players.some((p) => p.tier === currentPlayer?.tier);
                             const isFull = team.players.length >= MAX_PLAYERS_PER_TEAM;
                             return (
-                              <SelectItem key={team.id} value={team.id} disabled={isFull || hasTier}>
+                              <SelectItem key={team.id} value={team.id} disabled={isFull}>
                                 {team.name} · {team.ownerName} (budget{" "}
                                 {team.remainingBudget}, {team.players.length}/
-                                {MAX_PLAYERS_PER_TEAM}
-                                {hasTier ? `, has Tier ${currentPlayer?.tier}` : ""})
+                                {MAX_PLAYERS_PER_TEAM})
                               </SelectItem>
                             );
                           })}
@@ -251,14 +237,7 @@ export function AuctionBoard({
                   key={p.id}
                   className="flex items-center justify-between text-sm"
                 >
-                  <span>
-                    {p.name}
-                    {p.tier && (
-                      <span className="ml-1.5 text-xs text-muted-foreground">
-                        (Tier {p.tier})
-                      </span>
-                    )}
-                  </span>
+                  <span>{p.name}</span>
                   <span className="text-muted-foreground">
                     {p.auctionPrice}
                   </span>

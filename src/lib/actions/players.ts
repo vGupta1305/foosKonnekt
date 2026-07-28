@@ -7,6 +7,7 @@ import { ActionError, runSerializable } from "@/lib/serializable-transaction";
 import {
   MAX_PLAYERS,
   MAX_PLAYERS_PER_TIER,
+  PLAYER_TIERS,
   csvPlayerRowSchema,
   playerFormSchema,
 } from "@/lib/validations/player";
@@ -155,7 +156,7 @@ export async function importPlayersCsv(
       }
 
       const existingTierCounts = new Map<string, number>();
-      for (const tier of ["A", "B", "C", "D"]) {
+      for (const tier of PLAYER_TIERS) {
         existingTierCounts.set(tier, await tx.player.count({ where: { tier: tier as never } }));
       }
 
