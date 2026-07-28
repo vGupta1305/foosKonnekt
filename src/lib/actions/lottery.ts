@@ -44,7 +44,7 @@ export async function runLottery(): Promise<ActionResult<{ assignments: { player
   if (tierAPlayers.length !== MAX_PLAYERS_PER_TIER) {
     return {
       ok: false,
-      error: `Tier A must have exactly ${MAX_PLAYERS_PER_TIER} players (currently ${tierAPlayers.length})`,
+      error: `Allocated must have exactly ${MAX_PLAYERS_PER_TIER} players (currently ${tierAPlayers.length})`,
     };
   }
   if (tierAPlayers.some((p) => p.teamId)) {

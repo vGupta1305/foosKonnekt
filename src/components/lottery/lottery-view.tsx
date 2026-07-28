@@ -64,13 +64,13 @@ export function LotteryView({
       <Card>
         <CardHeader>
           <CardTitle className="text-base">
-            Tier A players ({tierAPlayers.length} / {MAX_PLAYERS_PER_TIER})
+            Allocated players ({tierAPlayers.length} / {MAX_PLAYERS_PER_TIER})
           </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           {!readyCount && (
             <p className="text-sm text-muted-foreground">
-              Assign exactly {MAX_PLAYERS_PER_TIER} players to Tier A on the
+              Assign exactly {MAX_PLAYERS_PER_TIER} players to Allocated on the
               Players page before running the lottery.
             </p>
           )}
@@ -87,7 +87,7 @@ export function LotteryView({
                 {tierAPlayers.length === 0 && (
                   <TableRow>
                     <TableCell colSpan={2} className="py-8 text-center text-muted-foreground">
-                      No Tier A players yet.
+                      No allocated players yet.
                     </TableCell>
                   </TableRow>
                 )}
@@ -135,9 +135,9 @@ export function LotteryView({
       <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Run the Tier A lottery?</AlertDialogTitle>
+            <AlertDialogTitle>Run the allocation lottery?</AlertDialogTitle>
             <AlertDialogDescription>
-              This randomly assigns each Tier A player to one team, free of
+              This randomly assigns each allocated player to one team, free of
               charge. It cannot be undone except via Reset Tournament.
             </AlertDialogDescription>
           </AlertDialogHeader>

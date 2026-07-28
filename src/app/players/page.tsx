@@ -12,8 +12,8 @@ export default async function PlayersPage() {
       <div className="mb-6 flex flex-col gap-1">
         <h1 className="text-2xl font-semibold tracking-tight">Players</h1>
         <p className="text-sm text-muted-foreground">
-          Manage the player pool ahead of the auction. Maximum 20 players, in
-          4 tiers of 5. Tier A is drawn by lottery; tiers B-D are auctioned.
+          Manage the player pool ahead of the auction. Maximum 16 players. 4
+          are allocated by lottery; the rest are auctioned.
         </p>
       </div>
       <PlayerTable

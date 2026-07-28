@@ -119,7 +119,7 @@ export function PlayerTable({
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
-              <TableHead>Tier</TableHead>
+              <TableHead>Category</TableHead>
               <TableHead>Position</TableHead>
               <TableHead>Auction price</TableHead>
               <TableHead>Team</TableHead>
@@ -142,9 +142,9 @@ export function PlayerTable({
                 <TableCell className="font-medium">{player.name}</TableCell>
                 <TableCell>
                   {player.tier ? (
-                    <Badge variant="outline">Tier {player.tier}</Badge>
+                    <Badge variant="outline">Allocated</Badge>
                   ) : (
-                    "—"
+                    "Auctioned"
                   )}
                 </TableCell>
                 <TableCell>

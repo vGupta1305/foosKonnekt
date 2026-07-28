@@ -120,7 +120,7 @@ export function PlayerFormDialog({
           </div>
 
           <div className="flex flex-col gap-1.5">
-            <Label>Tier (optional)</Label>
+            <Label>Category (optional)</Label>
             <Controller
               control={form.control}
               name="tier"
@@ -130,13 +130,12 @@ export function PlayerFormDialog({
                   onValueChange={(v) => field.onChange(v)}
                 >
                   <SelectTrigger className="w-full">
-                    <SelectValue placeholder="No tier assigned" />
+                    <SelectValue placeholder="Auctioned (default)" />
                   </SelectTrigger>
                   <SelectContent>
                     {PLAYER_TIERS.map((tier) => (
                       <SelectItem key={tier} value={tier}>
-                        Tier {tier}
-                        {tier === "A" ? " (lottery)" : " (auction)"}
+                        Allocated
                       </SelectItem>
                     ))}
                   </SelectContent>

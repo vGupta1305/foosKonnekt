@@ -45,7 +45,7 @@ export async function createPlayer(
         const tierCount = await tx.player.count({ where: { tier: parsed.data.tier } });
         if (tierCount >= MAX_PLAYERS_PER_TIER) {
           throw new ActionError(
-            `Tier ${parsed.data.tier} already has ${MAX_PLAYERS_PER_TIER} players`,
+            `Allocated already has ${MAX_PLAYERS_PER_TIER} players`,
           );
         }
       }
@@ -81,7 +81,7 @@ export async function updatePlayer(
         });
         if (tierCount >= MAX_PLAYERS_PER_TIER) {
           throw new ActionError(
-            `Tier ${parsed.data.tier} already has ${MAX_PLAYERS_PER_TIER} players`,
+            `Allocated already has ${MAX_PLAYERS_PER_TIER} players`,
           );
         }
       }
