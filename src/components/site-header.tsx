@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LogOut } from "lucide-react";
+import { LogOut, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
@@ -51,9 +51,17 @@ export function SiteHeader({ session }: { session: HeaderSession }) {
             <span className="text-accent">Foos</span>Konnekt
           </Link>
           <div className="flex items-center gap-1">
-            <span className="hidden px-1 text-xs text-sidebar-foreground/60 sm:inline">
+            <Link
+              href="/account"
+              className="hidden px-1 text-xs text-sidebar-foreground/60 hover:text-sidebar-foreground sm:inline"
+            >
               {session.username} · {session.role === "ADMIN" ? "Admin" : "Read-only"}
-            </span>
+            </Link>
+            <Button asChild variant="ghost" size="icon-sm" className="sm:hidden" aria-label="Account">
+              <Link href="/account">
+                <UserRound />
+              </Link>
+            </Button>
             <ThemeToggle />
             <form action={logout}>
               <Button type="submit" variant="ghost" size="icon-sm" aria-label="Log out">
