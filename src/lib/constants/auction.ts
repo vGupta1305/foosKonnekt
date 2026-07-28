@@ -1,6 +1,6 @@
 export const MAX_PLAYERS_PER_TEAM = 4;
-export const MIN_BID = 10;
-export const MAX_BID = 60;
+export const MIN_BID = 1000;
+export const MAX_BID = 6000;
 
 /** Tier C is auctioned first, then Tier B. Tier A is lottery-only. */
 export const TIER_AUCTION_ORDER = ["C", "B"] as const;

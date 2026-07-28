@@ -7,7 +7,7 @@ import { OWNER_COUNT, ownerFormSchema } from "@/lib/validations/owner";
 import type { ActionResult } from "@/lib/actions/players";
 import { runSerializable } from "@/lib/serializable-transaction";
 
-const DEFAULT_STARTING_BUDGET = 100;
+const DEFAULT_STARTING_BUDGET = 10000;
 const ownersInclude = { team: { select: { id: true, name: true } } } as const;
 
 export async function getOwners() {

@@ -33,7 +33,7 @@ export function OwnerEditDialog({
 
   const form = useForm<OwnerFormValues>({
     resolver: zodResolver(ownerFormSchema),
-    defaultValues: { name: "", teamName: "", startingBudget: 100 },
+    defaultValues: { name: "", teamName: "", startingBudget: 10000 },
   });
 
   useEffect(() => {

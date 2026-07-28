@@ -70,8 +70,8 @@ model Owner {
   id              String   @id @default(cuid())
   name            String
   teamName        String?
-  startingBudget  Int      @default(100)
-  remainingBudget Int      @default(100)
+  startingBudget  Int      @default(10000)
+  remainingBudget Int      @default(10000)
   team            Team?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
