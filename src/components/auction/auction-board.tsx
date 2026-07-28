@@ -22,36 +22,28 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { reshufflePool, sellPlayer } from "@/lib/actions/auction";
-import {
-  MAX_BID,
-  MAX_PER_TEAM_BY_TIER,
-  MAX_PLAYERS_PER_TEAM,
-  MIN_BID,
-} from "@/lib/constants/auction";
+import { MAX_BID, MAX_PLAYERS_PER_TEAM, MIN_BID } from "@/lib/constants/auction";
 
 type Team = {
   id: string;
   name: string;
   ownerName: string;
   remainingBudget: number;
-  players: { id: string; name: string; auctionPrice: number | null; tier: string | null }[];
+  players: { id: string; name: string; auctionPrice: number | null }[];
 };
 
 type UnsoldPlayer = {
   id: string;
   name: string;
-  tier: string | null;
 };
 
 export function AuctionBoard({
   teams,
   unsoldPlayers,
-  currentTier,
   isAdmin,
 }: {
   teams: Team[];
   unsoldPlayers: UnsoldPlayer[];
-  currentTier: string | null;
   isAdmin: boolean;
 }) {
   const currentPlayer = unsoldPlayers[0] ?? null;
@@ -73,15 +65,6 @@ export function AuctionBoard({
 
   const highestBidderTeam = teams.find((t) => t.id === highestBidderTeamId);
 
-  function tierCapFor(team: Team) {
-    if (!currentPlayer?.tier) return null;
-    const cap =
-      MAX_PER_TEAM_BY_TIER[currentPlayer.tier as keyof typeof MAX_PER_TEAM_BY_TIER];
-    if (!cap) return null;
-    const held = team.players.filter((p) => p.tier === currentPlayer.tier).length;
-    return { cap, held };
-  }
-
   function handleIncreaseBid() {
     const amount = Number(bidAmount);
     if (!bidTeamId) {
@@ -100,11 +83,6 @@ export function AuctionBoard({
     if (!team) return;
     if (team.players.length >= MAX_PLAYERS_PER_TEAM) {
       toast.error(`${team.name} already has ${MAX_PLAYERS_PER_TEAM} players`);
-      return;
-    }
-    const tierCap = tierCapFor(team);
-    if (tierCap && tierCap.held >= tierCap.cap) {
-      toast.error(`${team.name} already has ${tierCap.cap} Tier ${currentPlayer?.tier} player(s)`);
       return;
     }
     if (amount > team.remainingBudget) {
@@ -145,9 +123,8 @@ export function AuctionBoard({
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span>{currentPlayer ? "Current player" : "Auction complete"}</span>
-            {currentTier && <Badge variant="secondary">Tier {currentTier}</Badge>}
+          <CardTitle>
+            {currentPlayer ? "Current player" : "Auction complete"}
           </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-6">
@@ -157,7 +134,7 @@ export function AuctionBoard({
                 <div className="flex flex-col gap-1">
                   <p className="text-2xl font-semibold">{currentPlayer.name}</p>
                   <p className="text-xs text-muted-foreground">
-                    {unsoldPlayers.length} player(s) remaining in this tier
+                    {unsoldPlayers.length} player(s) remaining in the pool
                   </p>
                 </div>
                 {isAdmin && (
@@ -167,7 +144,7 @@ export function AuctionBoard({
                     onClick={handleReshuffle}
                     disabled={submitting}
                   >
-                    <Shuffle /> Randomize tier
+                    <Shuffle /> Randomize pool
                   </Button>
                 )}
               </div>
@@ -203,18 +180,11 @@ export function AuctionBoard({
                         <SelectContent>
                           {teams.map((team) => {
                             const isFull = team.players.length >= MAX_PLAYERS_PER_TEAM;
-                            const tierCap = tierCapFor(team);
-                            const tierFull = Boolean(tierCap && tierCap.held >= tierCap.cap);
                             return (
-                              <SelectItem
-                                key={team.id}
-                                value={team.id}
-                                disabled={isFull || tierFull}
-                              >
+                              <SelectItem key={team.id} value={team.id} disabled={isFull}>
                                 {team.name} · {team.ownerName} (budget{" "}
                                 {team.remainingBudget}, {team.players.length}/
-                                {MAX_PLAYERS_PER_TEAM}
-                                {tierCap ? `, ${tierCap.held}/${tierCap.cap} Tier ${currentPlayer.tier}` : ""})
+                                {MAX_PLAYERS_PER_TEAM})
                               </SelectItem>
                             );
                           })}
@@ -275,14 +245,7 @@ export function AuctionBoard({
                   key={p.id}
                   className="flex items-center justify-between text-sm"
                 >
-                  <span>
-                    {p.name}
-                    {p.tier && (
-                      <span className="ml-1 text-xs text-muted-foreground">
-                        (Tier {p.tier})
-                      </span>
-                    )}
-                  </span>
+                  <span>{p.name}</span>
                   <span className="text-muted-foreground">
                     {p.auctionPrice}
                   </span>

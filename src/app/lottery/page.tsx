@@ -16,7 +16,7 @@ export default async function LotteryPage() {
       <div className="mb-6 flex flex-col gap-1">
         <h1 className="text-2xl font-semibold tracking-tight">Tier A Lottery</h1>
         <p className="text-sm text-muted-foreground">
-          Tier A players ({MAX_PLAYERS_PER_TIER.A} total) are drawn by lot and
+          Tier A players ({MAX_PLAYERS_PER_TIER} total) are drawn by lot and
           assigned one per team, free of charge. The remaining players are
           auctioned normally.
         </p>

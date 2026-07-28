@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const OWNER_COUNT = 5;
+export const OWNER_COUNT = 4;
 
 export const ownerFormSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100),

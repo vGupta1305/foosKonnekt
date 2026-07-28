@@ -16,7 +16,7 @@ export async function getLotteryData() {
   });
 
   const lotteryComplete =
-    tierAPlayers.length === MAX_PLAYERS_PER_TIER.A &&
+    tierAPlayers.length === MAX_PLAYERS_PER_TIER &&
     tierAPlayers.every((p) => p.teamId != null);
 
   return { teams, tierAPlayers, lotteryComplete };
@@ -36,15 +36,15 @@ export async function runLottery(): Promise<ActionResult<{ assignments: { player
   if (authError) return authError;
 
   const teams = await ensureTeams();
-  if (teams.length !== MAX_PLAYERS_PER_TIER.A) {
-    return { ok: false, error: `Need exactly ${MAX_PLAYERS_PER_TIER.A} teams to run the lottery` };
+  if (teams.length !== MAX_PLAYERS_PER_TIER) {
+    return { ok: false, error: `Need exactly ${MAX_PLAYERS_PER_TIER} teams to run the lottery` };
   }
 
   const tierAPlayers = await prisma.player.findMany({ where: { tier: "A" } });
-  if (tierAPlayers.length !== MAX_PLAYERS_PER_TIER.A) {
+  if (tierAPlayers.length !== MAX_PLAYERS_PER_TIER) {
     return {
       ok: false,
-      error: `Tier A must have exactly ${MAX_PLAYERS_PER_TIER.A} players (currently ${tierAPlayers.length})`,
+      error: `Tier A must have exactly ${MAX_PLAYERS_PER_TIER} players (currently ${tierAPlayers.length})`,
     };
   }
   if (tierAPlayers.some((p) => p.teamId)) {
