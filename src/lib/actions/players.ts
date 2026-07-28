@@ -42,11 +42,10 @@ export async function createPlayer(
       }
 
       if (parsed.data.tier) {
+        const cap = MAX_PLAYERS_PER_TIER[parsed.data.tier];
         const tierCount = await tx.player.count({ where: { tier: parsed.data.tier } });
-        if (tierCount >= MAX_PLAYERS_PER_TIER) {
-          throw new ActionError(
-            `Tier ${parsed.data.tier} already has ${MAX_PLAYERS_PER_TIER} players`,
-          );
+        if (tierCount >= cap) {
+          throw new ActionError(`Tier ${parsed.data.tier} already has ${cap} players`);
         }
       }
 
@@ -76,13 +75,12 @@ export async function updatePlayer(
   try {
     await runSerializable(async (tx) => {
       if (parsed.data.tier) {
+        const cap = MAX_PLAYERS_PER_TIER[parsed.data.tier];
         const tierCount = await tx.player.count({
           where: { tier: parsed.data.tier, id: { not: id } },
         });
-        if (tierCount >= MAX_PLAYERS_PER_TIER) {
-          throw new ActionError(
-            `Tier ${parsed.data.tier} already has ${MAX_PLAYERS_PER_TIER} players`,
-          );
+        if (tierCount >= cap) {
+          throw new ActionError(`Tier ${parsed.data.tier} already has ${cap} players`);
         }
       }
 
@@ -135,7 +133,7 @@ export async function importPlayersCsv(
 
   const parsedRows: {
     name: string;
-    tier?: "A" | "B" | "C" | "D";
+    tier?: "A" | "B" | "C";
     position?: "ATTACKER" | "DEFENDER" | "ALL_ROUNDER";
   }[] = [];
   for (const row of rows) {
@@ -164,7 +162,8 @@ export async function importPlayersCsv(
       for (const row of parsedRows) {
         if (row.tier) {
           const current = existingTierCounts.get(row.tier) ?? 0;
-          if (current >= MAX_PLAYERS_PER_TIER) continue;
+          const cap = MAX_PLAYERS_PER_TIER[row.tier as keyof typeof MAX_PLAYERS_PER_TIER];
+          if (current >= cap) continue;
           existingTierCounts.set(row.tier, current + 1);
         }
         toCreate.push(row);

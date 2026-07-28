@@ -22,6 +22,8 @@ enum GameWinner {
 
 enum PlayerTier {
   A
+  B
+  C
 }
 
 enum PlayerPosition {

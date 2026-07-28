@@ -1,9 +1,13 @@
 import { z } from "zod";
 
 export const MAX_PLAYERS = 20;
-export const PLAYER_TIERS = ["A"] as const;
-/** Tier A (lottery) must have exactly this many players. */
-export const MAX_PLAYERS_PER_TIER = 5;
+export const PLAYER_TIERS = ["A", "B", "C"] as const;
+/** Tier A is lottery-drawn (5); Tier B (10) and Tier C (5) are auctioned. */
+export const MAX_PLAYERS_PER_TIER: Record<(typeof PLAYER_TIERS)[number], number> = {
+  A: 5,
+  B: 10,
+  C: 5,
+};
 export const PLAYER_POSITIONS = ["ATTACKER", "DEFENDER", "ALL_ROUNDER"] as const;
 
 const tierField = z

@@ -135,7 +135,8 @@ export function PlayerFormDialog({
                   <SelectContent>
                     {PLAYER_TIERS.map((tier) => (
                       <SelectItem key={tier} value={tier}>
-                        Tier {tier} (lottery)
+                        Tier {tier}
+                        {tier === "A" ? " (lottery)" : " (auction)"}
                       </SelectItem>
                     ))}
                   </SelectContent>

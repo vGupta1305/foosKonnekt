@@ -44,7 +44,7 @@ export function LotteryView({
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [busy, setBusy] = useState(false);
 
-  const readyCount = tierAPlayers.length === MAX_PLAYERS_PER_TIER;
+  const readyCount = tierAPlayers.length === MAX_PLAYERS_PER_TIER.A;
 
   async function handleRunLottery() {
     setBusy(true);
@@ -64,13 +64,13 @@ export function LotteryView({
       <Card>
         <CardHeader>
           <CardTitle className="text-base">
-            Tier A players ({tierAPlayers.length} / {MAX_PLAYERS_PER_TIER})
+            Tier A players ({tierAPlayers.length} / {MAX_PLAYERS_PER_TIER.A})
           </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-4">
           {!readyCount && (
             <p className="text-sm text-muted-foreground">
-              Assign exactly {MAX_PLAYERS_PER_TIER} players to Tier A on the
+              Assign exactly {MAX_PLAYERS_PER_TIER.A} players to Tier A on the
               Players page before running the lottery.
             </p>
           )}

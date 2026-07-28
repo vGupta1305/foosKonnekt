@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Gavel, Shuffle, SkipForward } from "lucide-react";
+import { Gavel, Shuffle } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -21,29 +21,37 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { reshufflePool, sellPlayer, skipPlayer } from "@/lib/actions/auction";
-import { MAX_BID, MAX_PLAYERS_PER_TEAM, MIN_BID } from "@/lib/constants/auction";
+import { reshufflePool, sellPlayer } from "@/lib/actions/auction";
+import {
+  MAX_BID,
+  MAX_PER_TEAM_BY_TIER,
+  MAX_PLAYERS_PER_TEAM,
+  MIN_BID,
+} from "@/lib/constants/auction";
 
 type Team = {
   id: string;
   name: string;
   ownerName: string;
   remainingBudget: number;
-  players: { id: string; name: string; auctionPrice: number | null }[];
+  players: { id: string; name: string; auctionPrice: number | null; tier: string | null }[];
 };
 
 type UnsoldPlayer = {
   id: string;
   name: string;
+  tier: string | null;
 };
 
 export function AuctionBoard({
   teams,
   unsoldPlayers,
+  currentTier,
   isAdmin,
 }: {
   teams: Team[];
   unsoldPlayers: UnsoldPlayer[];
+  currentTier: string | null;
   isAdmin: boolean;
 }) {
   const currentPlayer = unsoldPlayers[0] ?? null;
@@ -65,6 +73,15 @@ export function AuctionBoard({
 
   const highestBidderTeam = teams.find((t) => t.id === highestBidderTeamId);
 
+  function tierCapFor(team: Team) {
+    if (!currentPlayer?.tier) return null;
+    const cap =
+      MAX_PER_TEAM_BY_TIER[currentPlayer.tier as keyof typeof MAX_PER_TEAM_BY_TIER];
+    if (!cap) return null;
+    const held = team.players.filter((p) => p.tier === currentPlayer.tier).length;
+    return { cap, held };
+  }
+
   function handleIncreaseBid() {
     const amount = Number(bidAmount);
     if (!bidTeamId) {
@@ -83,6 +100,11 @@ export function AuctionBoard({
     if (!team) return;
     if (team.players.length >= MAX_PLAYERS_PER_TEAM) {
       toast.error(`${team.name} already has ${MAX_PLAYERS_PER_TEAM} players`);
+      return;
+    }
+    const tierCap = tierCapFor(team);
+    if (tierCap && tierCap.held >= tierCap.cap) {
+      toast.error(`${team.name} already has ${tierCap.cap} Tier ${currentPlayer?.tier} player(s)`);
       return;
     }
     if (amount > team.remainingBudget) {
@@ -107,19 +129,6 @@ export function AuctionBoard({
     toast.success(`${currentPlayer.name} sold for ${currentBid}`);
   }
 
-  async function handleSkip() {
-    if (!currentPlayer) return;
-    setSubmitting(true);
-    const result = await skipPlayer(currentPlayer.id);
-    setSubmitting(false);
-
-    if (!result.ok) {
-      toast.error(result.error);
-      return;
-    }
-    toast.info(`${currentPlayer.name} skipped`);
-  }
-
   async function handleReshuffle() {
     setSubmitting(true);
     const result = await reshufflePool();
@@ -136,8 +145,9 @@ export function AuctionBoard({
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
       <Card>
         <CardHeader>
-          <CardTitle>
-            {currentPlayer ? "Current player" : "Auction complete"}
+          <CardTitle className="flex items-center justify-between">
+            <span>{currentPlayer ? "Current player" : "Auction complete"}</span>
+            {currentTier && <Badge variant="secondary">Tier {currentTier}</Badge>}
           </CardTitle>
         </CardHeader>
         <CardContent className="flex flex-col gap-6">
@@ -147,7 +157,7 @@ export function AuctionBoard({
                 <div className="flex flex-col gap-1">
                   <p className="text-2xl font-semibold">{currentPlayer.name}</p>
                   <p className="text-xs text-muted-foreground">
-                    {unsoldPlayers.length} player(s) remaining in the pool
+                    {unsoldPlayers.length} player(s) remaining in this tier
                   </p>
                 </div>
                 {isAdmin && (
@@ -157,7 +167,7 @@ export function AuctionBoard({
                     onClick={handleReshuffle}
                     disabled={submitting}
                   >
-                    <Shuffle /> Randomize pool
+                    <Shuffle /> Randomize tier
                   </Button>
                 )}
               </div>
@@ -193,11 +203,18 @@ export function AuctionBoard({
                         <SelectContent>
                           {teams.map((team) => {
                             const isFull = team.players.length >= MAX_PLAYERS_PER_TEAM;
+                            const tierCap = tierCapFor(team);
+                            const tierFull = Boolean(tierCap && tierCap.held >= tierCap.cap);
                             return (
-                              <SelectItem key={team.id} value={team.id} disabled={isFull}>
+                              <SelectItem
+                                key={team.id}
+                                value={team.id}
+                                disabled={isFull || tierFull}
+                              >
                                 {team.name} · {team.ownerName} (budget{" "}
                                 {team.remainingBudget}, {team.players.length}/
-                                {MAX_PLAYERS_PER_TEAM})
+                                {MAX_PLAYERS_PER_TEAM}
+                                {tierCap ? `, ${tierCap.held}/${tierCap.cap} Tier ${currentPlayer.tier}` : ""})
                               </SelectItem>
                             );
                           })}
@@ -221,9 +238,6 @@ export function AuctionBoard({
                   </div>
 
                   <div className="flex justify-end gap-2">
-                    <Button variant="ghost" onClick={handleSkip} disabled={submitting}>
-                      <SkipForward /> Skip player
-                    </Button>
                     <Button
                       onClick={handleSell}
                       disabled={submitting || !highestBidderTeamId}
@@ -261,7 +275,14 @@ export function AuctionBoard({
                   key={p.id}
                   className="flex items-center justify-between text-sm"
                 >
-                  <span>{p.name}</span>
+                  <span>
+                    {p.name}
+                    {p.tier && (
+                      <span className="ml-1 text-xs text-muted-foreground">
+                        (Tier {p.tier})
+                      </span>
+                    )}
+                  </span>
                   <span className="text-muted-foreground">
                     {p.auctionPrice}
                   </span>
