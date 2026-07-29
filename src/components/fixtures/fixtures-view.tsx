@@ -7,6 +7,7 @@ import { Printer, Shuffle } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Table,
   TableBody,
@@ -15,7 +16,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { generateFixtures } from "@/lib/actions/fixtures";
+import { generateFixtures, updateMatchDate } from "@/lib/actions/fixtures";
+import { OWNER_COUNT } from "@/lib/validations/owner";
 
 export type MatchRow = {
   id: string;
@@ -25,7 +27,65 @@ export type MatchRow = {
   homeScore: number;
   awayScore: number;
   gamesPlayed: number;
+  scheduledDate: string | null;
 };
+
+function toDateInputValue(iso: string | null) {
+  if (!iso) return "";
+  // scheduledDate is stored as UTC-midnight for its calendar date (see
+  // generateFixtures/updateMatchDate) — read it back with UTC getters, not
+  // local ones, or the date drifts by a day depending on the viewer's
+  // timezone offset from UTC.
+  const date = new Date(iso);
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+  const day = String(date.getUTCDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function formatDate(iso: string | null) {
+  if (!iso) return "TBD";
+  return new Date(iso).toLocaleDateString(undefined, {
+    timeZone: "UTC",
+    weekday: "short",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+function MatchDateCell({
+  matchId,
+  scheduledDate,
+}: {
+  matchId: string;
+  scheduledDate: string | null;
+}) {
+  const [value, setValue] = useState(toDateInputValue(scheduledDate));
+  const [saving, setSaving] = useState(false);
+
+  async function handleBlur() {
+    if (!value || toDateInputValue(scheduledDate) === value) return;
+    setSaving(true);
+    const result = await updateMatchDate(matchId, value);
+    setSaving(false);
+    if (!result.ok) {
+      toast.error(result.error);
+      return;
+    }
+    toast.success("Date updated");
+  }
+
+  return (
+    <Input
+      type="date"
+      value={value}
+      disabled={saving}
+      onChange={(e) => setValue(e.target.value)}
+      onBlur={handleBlur}
+      className="h-8 w-36"
+    />
+  );
+}
 
 export function FixturesView({
   matches,
@@ -54,7 +114,7 @@ export function FixturesView({
         <p className="text-sm text-muted-foreground">
           No fixtures yet.{" "}
           {isAdmin
-            ? "Generate the round-robin schedule once all 5 teams are finalized from the auction."
+            ? `Generate the round-robin schedule once all ${OWNER_COUNT} teams are finalized from the auction.`
             : "Waiting for the admin to generate the round-robin schedule."}
         </p>
         {isAdmin && (
@@ -81,6 +141,7 @@ export function FixturesView({
         <TableHeader>
           <TableRow>
             <TableHead>Matchup</TableHead>
+            <TableHead>Date</TableHead>
             <TableHead>Games played</TableHead>
             <TableHead>Score</TableHead>
             <TableHead>Status</TableHead>
@@ -92,6 +153,13 @@ export function FixturesView({
             <TableRow key={match.id}>
               <TableCell className="font-medium">
                 {match.homeTeamName} vs {match.awayTeamName}
+              </TableCell>
+              <TableCell>
+                {isAdmin ? (
+                  <MatchDateCell matchId={match.id} scheduledDate={match.scheduledDate} />
+                ) : (
+                  formatDate(match.scheduledDate)
+                )}
               </TableCell>
               <TableCell>{match.gamesPlayed} / 3</TableCell>
               <TableCell>

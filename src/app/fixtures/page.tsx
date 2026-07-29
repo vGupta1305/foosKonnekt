@@ -26,6 +26,7 @@ export default async function FixturesPage() {
           homeScore: m.homeScore,
           awayScore: m.awayScore,
           gamesPlayed: m.games.length,
+          scheduledDate: m.scheduledDate ? m.scheduledDate.toISOString() : null,
         }))}
       />
     </div>

@@ -18,6 +18,7 @@ const baseLinks = [
   { href: "/standings", label: "Standings" },
   { href: "/playoffs", label: "Playoffs" },
   { href: "/stats", label: "Stats" },
+  { href: "/rules", label: "Rules" },
 ];
 
 type HeaderSession = { username: string; role: "ADMIN" | "READ_ONLY" } | null;
